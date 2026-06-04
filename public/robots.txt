@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /login
+Disallow: /signin
+Disallow: /reset
+Disallow: /dashboard
+Sitemap: https://locallens.local/sitemap.xml

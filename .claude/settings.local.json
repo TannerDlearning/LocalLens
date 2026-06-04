@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(Get-ChildItem -Force)",
+      "Bash(Select-Object Name, Mode)"
+    ]
+  }
+}

@@ -1,0 +1,3 @@
+Fix styling of notifications on certain webpages when using dark reader extension
+add in more advanced analytics for premium users. Things like click on the row in the table and it will make a modal showing exactly what items were found and the names and data types. {DONE}
+fix copy and paste link or add a new direct link to dashboard page
