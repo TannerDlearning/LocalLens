@@ -66,7 +66,7 @@ function getGradientAndIcon(value, { green, orange }, reverse = false) {
 
 export function SectionCards({ data }) {
 
-  const { user, isPremium } = useAuth();
+  const { user } = useAuth();
 
   const totalTrackers = data.reduce((sum, row) => sum + (row.trackers ?? 0), 0);
   const totalStoredData = data.reduce((sum, row) => sum + (row.stored_data_types ?? 0), 0);
@@ -115,26 +115,7 @@ export function SectionCards({ data }) {
             <CardHeader>
               <CardDescription>{title}</CardDescription>
               <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-                {!user && title !== "Total Current Trackers" ? (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Image
-                        unoptimized
-                        src="/padlock_icon.png"
-                        alt="Create an account to see this data"
-                        width={32}
-                        height={32}
-                      />
-                    </TooltipTrigger>
-                    <TooltipContent className="max-w-xs text-left whitespace-pre-wrap">
-                      <p>
-                        {"Create a free account to view " + title.toLowerCase()}
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                ) : (
-                  <span>{value}</span>
-                )}
+                <span>{value}</span>
               </CardTitle>
             </CardHeader>
             <CardFooter className="flex-col items-start gap-1.5 text-sm text-muted-foreground">

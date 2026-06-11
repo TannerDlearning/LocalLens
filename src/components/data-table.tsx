@@ -18,7 +18,6 @@ import {
 import DeleteIcon from '@mui/icons-material/Delete';
 import SettingsIcon from '@mui/icons-material/Settings';
 import RemoveRedEyeIcon from '@mui/icons-material/RemoveRedEye';
-import Image from "next/image";
 
 declare module "@tanstack/react-table" {
   interface ColumnMeta<TData extends unknown, TValue> {
@@ -85,7 +84,6 @@ import {
 
 
 import { toast } from "sonner";
-import { supabase } from "@/lib/supabaseClient";
 
 // 🔑 Row data type for the table
 export interface TableRecord {
@@ -110,7 +108,7 @@ interface DataTableProps {
   refreshData: () => void;
   mode?: "tracked" | "excluded";
   excludedWebsites?: string[];
-  authStatus: { loggedIn: boolean; isPremium: boolean };
+  authStatus: { loggedIn: boolean };
   userId: string | null;
   loading: boolean;
 }
@@ -141,8 +139,6 @@ export function DataTable({
 
   const [analyticsLoadingToastId, setAnalyticsLoadingToastId] = React.useState<string | number | null>(null);
 
-  const [showPremiumModal, setShowPremiumModal] = React.useState(false);
-  const [premiumModalText, setPremiumModalText] = React.useState("");
 
   // Keep the current user in state so auth doesn’t flap between calls
   const [user, setUser] = React.useState<any>(null);
@@ -383,16 +379,6 @@ export function DataTable({
       return;
     }
 
-
-
-    if (!authStatus?.isPremium) {
-      toast.error("Advanced analytics requires a Premium subscription.");
-      setShowPremiumModal(false);
-      setPremiumModalText("Advanced analytics is a Premium feature. Upgrade now to unlock detailed insights about the trackers and data stored by each website.");
-      requestAnimationFrame(() => setShowPremiumModal(true));
-      return;
-    }
-
     const analyticsLoadingToastId = toast.loading("Loading advanced analytics...");
     setAnalyticsLoadingToastId(analyticsLoadingToastId);
 
@@ -410,7 +396,7 @@ export function DataTable({
     );
   };
 
-  const canRevoke = async (amountToRevoke: number): Promise<boolean> => {
+  const canRevoke = async (_amountToRevoke: number): Promise<boolean> => {
     if (!authStatus?.loggedIn || !userId) {
       toast.error("Please log in to revoke trackers.");
       return false;
@@ -421,56 +407,7 @@ export function DataTable({
       return false;
     }
 
-    if (authStatus?.isPremium) return true;
-
-    const FREE_LIMIT = 5;
-
-    // Fetch profile to check revoke count
-    const { data: profile, error } = await supabase
-      .from("profiles")
-      .select("id,is_premium,revoke_count")
-      .eq("id", userId)
-      .maybeSingle();
-
-    if (error || !profile) {
-      toast.error("Could not check your account. Please try again.");
-      return false;
-    }
-
-    const current = profile.revoke_count ?? 0;
-    if (current + amountToRevoke > FREE_LIMIT) {
-      toast.error("Free revoke limit reached. Upgrade to Premium.");
-      setPremiumModalText("You've reached the free limit of 5 revokes. Upgrade to Premium for unlimited control.");
-      requestAnimationFrame(() => setShowPremiumModal(true));
-      return false;
-    }
     return true;
-  };
-
-
-  const incrementRevokeCount = async () => {
-    if (!userId) return;
-
-    // ✅ Premium: don’t touch Supabase at all
-    if (authStatus?.isPremium) return;
-
-    // ✅ Still update DB, but now it cannot hang forever because client has fetch timeout
-    const { error: rpcErr } = await supabase.rpc("increment_revoke_count", { uid: userId });
-
-    if (rpcErr) {
-      // fallback: only if needed
-      const { data: p } = await supabase
-        .from("profiles")
-        .select("revoke_count")
-        .eq("id", userId)
-        .maybeSingle();
-
-      const current = p?.revoke_count ?? 0;
-
-      await supabase.from("profiles")
-        .update({ revoke_count: current + 1 })
-        .eq("id", userId);
-    }
   };
 
 
@@ -620,60 +557,14 @@ export function DataTable({
       accessorKey: "stored_data_types",
       meta: { label: "Stored Data Types" },
       header: "Stored Data Types",
-      cell: ({ row }) => (
-        authStatus?.loggedIn ? (
-          <span>{row.original.stored_data_types}</span>
-        ) : (
-          <div className="flex justify-center">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Image
-                  unoptimized
-                  src="/padlock_icon.png"
-                  alt="Create an account to see this data"
-                  width={24}
-                  height={24}
-                />
-              </TooltipTrigger>
-              <TooltipContent className="max-w-xs text-left whitespace-pre-wrap">
-                <p>
-                  {"Create a free account to view stored data types"}
-                </p>
-              </TooltipContent>
-            </Tooltip>
-          </div>
-        )
-      ),
+      cell: ({ row }) => <span>{row.original.stored_data_types}</span>,
     },
 
     {
       accessorKey: "workers",
       meta: { label: "Workers" },
       header: "Workers",
-      cell: ({ row }) => (
-        authStatus?.loggedIn ? (
-          <span>{row.original.workers}</span>
-        ) : (
-          <div className="flex justify-center">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Image
-                  unoptimized
-                  src="/padlock_icon.png"
-                  alt="Create an account to see this data"
-                  width={24}
-                  height={24}
-                />
-              </TooltipTrigger>
-              <TooltipContent className="max-w-xs text-left whitespace-pre-wrap">
-                <p>
-                  {"Create a free account to view workers"}
-                </p>
-              </TooltipContent>
-            </Tooltip>
-          </div>
-        )
-      ),
+      cell: ({ row }) => <span>{row.original.workers}</span>,
     },
 
     {
@@ -699,73 +590,52 @@ export function DataTable({
             : `${(score * 100).toFixed(0)}%`;
 
         return (
-          authStatus?.loggedIn ? (
-            <div className="flex items-center justify-center gap-1">
-              <span>{display}</span>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button title="Trust Score Info">
-                      <Info className="w-4 h-4 text-muted-foreground cursor-pointer" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent className="max-w-xs text-left space-y-2">
-                    <p className="font-medium">
-                      What this website stores on your device:
-                    </p>
-
-                    <ul className="list-disc pl-4 space-y-1">
-                      <li>
-                        <strong>Cookies:</strong> {row.original.cookie_count}
-                      </li>
-                      <li>
-                        <strong>Saved site data:</strong>{" "}
-                        {row.original.local_storage_count} local items
-                        {row.original.indexeddb_count > 0 && (
-                          <> and {row.original.indexeddb_count} database</>
-                        )}
-                      </li>
-                      <li>
-                        <strong>Cached files:</strong>{" "}
-                        {row.original.cache_storage_count}
-                      </li>
-                      <li>
-                        <strong>Background features:</strong>{" "}
-                        {row.original.service_worker_count} active
-                      </li>
-                      <li>
-                        <strong>Form data access:</strong>{" "}
-                        {row.original.form_data_count}
-                      </li>
-                    </ul>
-
-                    <p className="text-sm text-muted-foreground">
-                      Fewer items usually means less tracking and less data kept after you leave.
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
-          ) : (
-            <div className="flex justify-center">
+          <div className="flex items-center justify-center gap-1">
+            <span>{display}</span>
+            <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Image
-                    unoptimized
-                    src="/padlock_icon.png"
-                    alt="Create an account to see this data"
-                    width={24}
-                    height={24}
-                  />
+                  <button type="button" title="Trust Score Info">
+                    <Info className="w-4 h-4 text-muted-foreground cursor-pointer" />
+                  </button>
                 </TooltipTrigger>
-                <TooltipContent className="max-w-xs text-left whitespace-pre-wrap">
-                  <p>
-                    {"Create a free account to view trust scores"}
+                <TooltipContent className="max-w-xs text-left space-y-2">
+                  <p className="font-medium">
+                    What this website stores on your device:
+                  </p>
+
+                  <ul className="list-disc pl-4 space-y-1">
+                    <li>
+                      <strong>Cookies:</strong> {row.original.cookie_count}
+                    </li>
+                    <li>
+                      <strong>Saved site data:</strong>{" "}
+                      {row.original.local_storage_count} local items
+                      {row.original.indexeddb_count > 0 && (
+                        <> and {row.original.indexeddb_count} database</>
+                      )}
+                    </li>
+                    <li>
+                      <strong>Cached files:</strong>{" "}
+                      {row.original.cache_storage_count}
+                    </li>
+                    <li>
+                      <strong>Background features:</strong>{" "}
+                      {row.original.service_worker_count} active
+                    </li>
+                    <li>
+                      <strong>Form data access:</strong>{" "}
+                      {row.original.form_data_count}
+                    </li>
+                  </ul>
+
+                  <p className="text-sm text-muted-foreground">
+                    Fewer items usually means less tracking and less data kept after you leave.
                   </p>
                 </TooltipContent>
               </Tooltip>
-            </div>
-          )
+            </TooltipProvider>
+          </div>
         );
       },
     },
@@ -882,7 +752,6 @@ export function DataTable({
 
                 setLoadingRevokeId(null);
                 refreshData();
-                await incrementRevokeCount();
               }
             }
           };
@@ -949,11 +818,7 @@ export function DataTable({
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                <p>
-                  {authStatus?.isPremium
-                    ? "View advanced analytics"
-                    : "Premium is needed to view advanced analytics for this website"}
-                </p>
+                <p>View advanced analytics</p>
               </TooltipContent>
             </Tooltip>
           </div>
@@ -1055,10 +920,6 @@ export function DataTable({
             bulkRevokeTimeoutRef.current = null;
           }
 
-          incrementRevokeCount().catch((e) =>
-            console.error("incrementRevokeCount failed:", e)
-          );
-
           table.resetRowSelection();
           refreshData();
         }
@@ -1158,7 +1019,6 @@ export function DataTable({
             <div className="text-muted-foreground">
               Nothing here is uploaded — this view is generated locally from your device.
             </div>
-            <Badge className="">Premium</Badge>
           </div>
           <ScrollArea className="max-h-[60vh] pr-4 w-full min-w-0">
             <Accordion type="multiple" className="w-full min-w-0">

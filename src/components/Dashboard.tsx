@@ -114,20 +114,20 @@ interface DashboardProps {
   isLoading?: boolean;
 }
 
-const postAuthStatus = (loggedIn: boolean, isPremium: boolean) => {
+const postAuthStatus = (loggedIn: boolean) => {
   window.postMessage(
     {
       source: "LocalLens Dev",
       type: "AUTH_STATUS",
       loggedIn,
-      isPremium,
+      isPremium: loggedIn,
     },
     "*"
   );
 };
 
 export default function Dashboard({ isLoading = false }: DashboardProps) {
-  const { user, isPremium, loggedIn, userId, loading } = useAuth();
+  const { user, loggedIn, userId, loading } = useAuth();
   const [rawData, setRawData] = useState<PermissionRecord[] | undefined>(
     undefined
   );
@@ -187,8 +187,8 @@ export default function Dashboard({ isLoading = false }: DashboardProps) {
 
   // Post auth status to extension
   useEffect(() => {
-    postAuthStatus(loggedIn, isPremium);
-  }, [loggedIn, isPremium]);
+    postAuthStatus(loggedIn);
+  }, [loggedIn]);
 
   // Resend verification email (works with either a logged-in unverified user
   // or a fresh signup with only pending email stored)
@@ -467,7 +467,7 @@ export default function Dashboard({ isLoading = false }: DashboardProps) {
                           data={viewMode === "tracked" ? trackedRows : excludedRows}
                           mode={viewMode}
                           excludedWebsites={excludedWebsites}
-                          authStatus={{ loggedIn, isPremium }}
+                          authStatus={{ loggedIn }}
                           userId={userId}
                           loading={loading}
                           refreshData={() =>

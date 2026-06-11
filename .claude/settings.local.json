@@ -3,7 +3,22 @@
     "allow": [
       "Bash(npm install:*)",
       "Bash(Get-ChildItem -Force)",
-      "Bash(Select-Object Name, Mode)"
+      "Bash(Select-Object Name, Mode)",
+      "PowerShell(Get-ChildItem -Path \"d:\\\\qa essays\\\\MP\\\\LocalLens-Website\" -Force | Select-Object Name, @{Name=\"Type\";Expression={if\\($_.PSIsContainer\\){\"DIR\"}else{\"FILE\"}}} | Format-Table -AutoSize)",
+      "PowerShell(Get-ChildItem -Path \"d:\\\\qa essays\\\\MP\\\\LocalLens-Website\" -File -Force | Where-Object {$_.Name -notlike \"node_modules\" -and $_.Name -notlike \".next\"} | Select-Object Name)",
+      "Bash(node -e \"const pkg=require\\('./package-lock.json'\\); const root=pkg.packages['']; console.log\\('deps:', Object.keys\\(root.dependencies||{}\\).length\\); console.log\\('devDeps:', JSON.stringify\\(root.devDependencies, null, 2\\)\\); console.log\\('typescript in packages:', !!pkg.packages['node_modules/typescript']\\); console.log\\('typescript version:', pkg.packages['node_modules/typescript'] && pkg.packages['node_modules/typescript'].version\\);\")",
+      "Bash(node_modules/.bin/tsc --version)",
+      "Bash(node_modules/.bin/tsc --noEmit)",
+      "Bash(echo \"EXIT CODE: $?\")",
+      "Bash(timeout 90 npm run lint)",
+      "Bash(node -e \"console.log\\(require\\('vitest/package.json'\\).version, require\\('@vitest/coverage-v8/package.json'\\).version\\)\")",
+      "Bash(echo \"TSC EXIT: $?\")",
+      "Bash(npx vitest *)",
+      "Bash(node -e ' *)",
+      "Bash(npm view *)",
+      "Bash(echo \"EXIT: $?\")",
+      "Bash(npm run *)",
+      "Bash(tasklist)"
     ]
   }
 }

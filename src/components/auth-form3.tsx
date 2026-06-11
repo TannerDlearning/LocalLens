@@ -229,26 +229,3 @@
 //   );
 // }
 
-// async function ensureProfile(userId: string, anonymousId?: string) {
-//   const { data: existing } = await supabase
-//     .from("profiles")
-//     .select("id, anonymous_id")
-//     .eq("id", userId)
-//     .maybeSingle();
-
-//   if (!existing) {
-//     await supabase.from("profiles").insert({
-//       id: userId,
-//       anonymous_id: anonymousId ?? null,
-//       is_premium: false,
-//       created_at: new Date().toISOString(),
-//       revoke_count: 0,
-//       stripe_customer_id: null,
-//     });
-//   } else if (anonymousId && !existing.anonymous_id) {
-//     await supabase
-//       .from("profiles")
-//       .update({ anonymous_id: anonymousId })
-//       .eq("id", userId);
-//   }
-// }

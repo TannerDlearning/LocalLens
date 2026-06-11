@@ -11,6 +11,7 @@ export async function upsertProfile(userId: string, anonymousId: string) {
     .eq("id", userId)
     .maybeSingle();
 
+
   if (selectError) {
     console.error("❌ Profile lookup failed:", selectError);
     throw selectError;
@@ -31,8 +32,6 @@ export async function upsertProfile(userId: string, anonymousId: string) {
   const { error: insertError } = await supabase.from("profiles").insert({
     id: userId,
     anonymous_id: anonymousId,
-    is_premium: false,
-    revoke_count: 0,
   });
 
   if (insertError) {

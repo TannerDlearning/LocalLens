@@ -28,7 +28,7 @@ import {
 import NotificationSettings from "./NotificationSettings";
 
 export default function Navbar({ extensionDetected = false }) {
-  const { user, isPremium } = useAuth();
+  const { user } = useAuth();
   const [notifOpen, setNotifOpen] = useState(false);
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -144,26 +144,6 @@ export default function Navbar({ extensionDetected = false }) {
                         {firstInitial}
                       </AvatarFallback>
                     </Avatar>
-                    {isPremium && (
-                      <span
-                        className="absolute -top-2.5 -left-2.5 rotate-[-40deg] w-6 h-6"
-                      >
-                        <svg
-                          width="24"
-                          height="24"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            d="M2 7l5 5 5-9 5 9 5-5-2 12H4L2 7z"
-                            fill="#FFD700"
-                            stroke="#B8860B"
-                            strokeWidth="1"
-                          />
-                        </svg>
-                      </span>
-                    )}
                   </div>
                 </DropdownMenuTrigger>
 
@@ -193,7 +173,7 @@ export default function Navbar({ extensionDetected = false }) {
               <>
                 <Link href="/signin">
                   <Button variant="outline" size="sm" className="font-medium cursor-pointer">
-                    Create Free Account
+                    Create Account
                   </Button>
                 </Link>
                 <Link href="/login">
